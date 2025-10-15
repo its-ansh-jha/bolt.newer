@@ -10,6 +10,26 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+## October 15, 2025 - UI/UX Enhancements & Download Feature
+- **Rebranded to InfonexAgent**: Changed app name from "Website Builder AI" to "InfonexAgent" across all pages
+- **Enhanced Landing Page**: Complete redesign with modern aesthetics:
+  - Animated gradient backgrounds with blob animations
+  - Gradient text for title with animation effects
+  - Improved visual hierarchy with icons
+  - Enhanced input section with labels and better placeholder text
+  - Gradient button with hover animations and arrow icon
+  - Feature cards showcasing AI-Powered, Lightning Fast, and Full Stack capabilities
+- **Download Functionality**: Added ability to export generated projects:
+  - Download button in File Explorer header
+  - Uses JSZip library to create zip files of entire project
+  - Maintains folder structure in exported zip
+  - Includes empty files (fixed to handle all file types correctly)
+- **Improved Chat Interface**: Enhanced message input with modern design:
+  - Gradient send button (blue to purple) with animations
+  - Better textarea styling with focus states
+  - Keyboard shortcuts (Enter to send, Shift+Enter for new line)
+  - Visual hints and icons for better UX
+
 ## October 15, 2025 - Replit Setup and OpenRouter Migration
 - **Migrated from Anthropic to OpenRouter**: Replaced Anthropic Claude API with OpenRouter's AI service (z-ai/glm-4.5-air:free model)
 - **Configured Replit proxy**: Updated Vite config to bind to 0.0.0.0:5000 and added proxy for /api routes
