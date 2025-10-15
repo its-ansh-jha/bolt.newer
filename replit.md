@@ -10,13 +10,6 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
-## October 15, 2025 - UX Enhancements and Feature Additions
-- **Download Project Feature**: Added ZIP export functionality allowing users to download entire project with all files and folder structure
-- **Auto-Open Files**: Files now automatically open in the code editor when AI creates or edits them, improving workflow visibility
-- **Streaming Responses**: Implemented real-time streaming for AI chat responses using Server-Sent Events (SSE) for better user experience
-- **Enhanced UI**: Upgraded message box and send button with modern gradient design, hover effects, and keyboard shortcuts
-- **App Rebranding**: Changed application name from "Website Builder AI" to "InfonexAgent"
-
 ## October 15, 2025 - Replit Setup and OpenRouter Migration
 - **Migrated from Anthropic to OpenRouter**: Replaced Anthropic Claude API with OpenRouter's AI service (z-ai/glm-4.5-air:free model)
 - **Configured Replit proxy**: Updated Vite config to bind to 0.0.0.0:5000 and added proxy for /api routes
@@ -55,7 +48,6 @@ Preferred communication style: Simple, everyday language.
 
 **API Endpoints**:
 - `POST /template`: Accepts user prompt, queries AI for template type, returns appropriate base prompts and UI scaffolding.
-- `POST /chat`: Streaming endpoint that uses Server-Sent Events (SSE) to stream AI responses in real-time for better UX.
 
 **Constraints handling**: The system prompt includes detailed WebContainer limitations (no pip, no native binaries, no git, limited shell support) to guide the AI in generating compatible code.
 

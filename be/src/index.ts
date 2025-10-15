@@ -62,73 +62,30 @@ app.post("/template", async (req, res) => {
 app.post("/chat", async (req, res) => {
     const messages = req.body.messages;
     
-    try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                "model": "z-ai/glm-4.5-air:free",
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": getSystemPrompt()
-                    },
-                    ...messages
-                ],
-                "stream": true
-            })
-        });
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            "model": "z-ai/glm-4.5-air:free",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": getSystemPrompt()
+                },
+                ...messages
+            ]
+        })
+    });
 
-        // Set headers for streaming
-        res.setHeader('Content-Type', 'text/event-stream');
-        res.setHeader('Cache-Control', 'no-cache');
-        res.setHeader('Connection', 'keep-alive');
+    const data = await response.json();
+    console.log(data);
 
-        // Stream the response
-        const reader = response.body?.getReader();
-        const decoder = new TextDecoder();
-
-        if (!reader) {
-            res.status(500).json({ error: "No response body" });
-            return;
-        }
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value);
-            const lines = chunk.split('\n').filter(line => line.trim() !== '');
-
-            for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const data = line.slice(6);
-                    if (data === '[DONE]') {
-                        res.write('data: [DONE]\n\n');
-                        continue;
-                    }
-                    
-                    try {
-                        const parsed = JSON.parse(data);
-                        const content = parsed.choices?.[0]?.delta?.content;
-                        if (content) {
-                            res.write(`data: ${JSON.stringify({ content })}\n\n`);
-                        }
-                    } catch (e) {
-                        // Skip invalid JSON
-                    }
-                }
-            }
-        }
-
-        res.end();
-    } catch (error) {
-        console.error("Streaming error:", error);
-        res.status(500).json({ error: "Streaming failed" });
-    }
+    res.json({
+        response: data.choices[0].message.content
+    });
 })
 
 // Serve static files from the React app in production
