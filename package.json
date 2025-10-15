@@ -1,0 +1,15 @@
+{
+  "name": "website-builder-ai",
+  "version": "1.0.0",
+  "scripts": {
+    "install:backend": "cd be && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "build:backend": "cd be && npx tsc -b",
+    "build:frontend": "cd frontend && npm run build",
+    "build": "npm run install:backend && npm run install:frontend && npm run build:backend && npm run build:frontend",
+    "start": "cd be && node dist/index.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -4,6 +4,7 @@ import { BASE_PROMPT, getSystemPrompt } from "./prompts";
 import {basePrompt as nodeBasePrompt} from "./defaults/node";
 import {basePrompt as reactBasePrompt} from "./defaults/react";
 import cors from "cors";
+import path from "path";
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const app = express();
@@ -87,5 +88,19 @@ app.post("/chat", async (req, res) => {
     });
 })
 
-app.listen(3000);
+// Serve static files from the React app in production
+if (process.env.NODE_ENV === 'production') {
+    const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+    app.use(express.static(frontendDistPath));
+    
+    // Handle React routing - return index.html for all other routes
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(frontendDistPath, 'index.html'));
+    });
+}
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
 
