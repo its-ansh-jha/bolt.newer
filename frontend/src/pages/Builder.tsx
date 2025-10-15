@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { StepsList } from '../components/StepsList';
 import { FileExplorer } from '../components/FileExplorer';
@@ -10,17 +10,8 @@ import axios from 'axios';
 import { BACKEND_URL } from '../config';
 import { parseXml } from '../steps';
 import { useWebContainer } from '../hooks/useWebContainer';
-import { FileNode } from '@webcontainer/api';
 import { Loader } from '../components/Loader';
-
-const MOCK_FILE_CONTENT = `// This is a sample file content
-import React from 'react';
-
-function Component() {
-  return <div>Hello World</div>;
-}
-
-export default Component;`;
+import { Send, Sparkles } from 'lucide-react';
 
 export function Builder() {
   const location = useLocation();
@@ -193,7 +184,7 @@ export function Builder() {
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col">
       <header className="bg-gray-800 border-b border-gray-700 px-6 py-4">
-        <h1 className="text-xl font-semibold text-gray-100">Website Builder</h1>
+        <h1 className="text-xl font-semibold text-gray-100">InfonexAgent</h1>
         <p className="text-sm text-gray-400 mt-1">Prompt: {prompt}</p>
       </header>
       
@@ -208,40 +199,69 @@ export function Builder() {
                   onStepClick={setCurrentStep}
                 />
               </div>
-              <div>
-                <div className='flex'>
-                  <br />
-                  {(loading || !templateSet) && <Loader />}
-                  {!(loading || !templateSet) && <div className='flex'>
-                    <textarea value={userPrompt} onChange={(e) => {
-                    setPrompt(e.target.value)
-                  }} className='p-2 w-full'></textarea>
-                  <button onClick={async () => {
-                    const newMessage = {
-                      role: "user" as "user",
-                      content: userPrompt
-                    };
+              <div className='mt-4'>
+                {(loading || !templateSet) && (
+                  <div className='flex items-center justify-center py-6'>
+                    <Loader />
+                  </div>
+                )}
+                {!(loading || !templateSet) && (
+                  <div className='bg-gray-800 rounded-xl border border-gray-700 shadow-lg overflow-hidden'>
+                    <div className='relative'>
+                      <textarea 
+                        value={userPrompt} 
+                        onChange={(e) => setPrompt(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            if (userPrompt.trim()) {
+                              document.getElementById('send-button')?.click();
+                            }
+                          }
+                        }}
+                        placeholder='Ask AI to modify your project...'
+                        className='w-full bg-gray-800 text-gray-100 p-4 pr-12 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 rounded-xl placeholder-gray-500 min-h-[80px]'
+                      />
+                      <button 
+                        id='send-button'
+                        onClick={async () => {
+                          if (!userPrompt.trim()) return;
+                          
+                          const newMessage = {
+                            role: "user" as "user",
+                            content: userPrompt
+                          };
 
-                    setLoading(true);
-                    const stepsResponse = await axios.post(`${BACKEND_URL}/chat`, {
-                      messages: [...llmMessages, newMessage]
-                    });
-                    setLoading(false);
+                          setPrompt("");
+                          setLoading(true);
+                          const stepsResponse = await axios.post(`${BACKEND_URL}/chat`, {
+                            messages: [...llmMessages, newMessage]
+                          });
+                          setLoading(false);
 
-                    setLlmMessages(x => [...x, newMessage]);
-                    setLlmMessages(x => [...x, {
-                      role: "assistant",
-                      content: stepsResponse.data.response
-                    }]);
-                    
-                    setSteps(s => [...s, ...parseXml(stepsResponse.data.response).map(x => ({
-                      ...x,
-                      status: "pending" as "pending"
-                    }))]);
-
-                  }} className='bg-purple-400 px-4'>Send</button>
-                  </div>}
-                </div>
+                          setLlmMessages(x => [...x, newMessage]);
+                          setLlmMessages(x => [...x, {
+                            role: "assistant",
+                            content: stepsResponse.data.response
+                          }]);
+                          
+                          setSteps(s => [...s, ...parseXml(stepsResponse.data.response).map(x => ({
+                            ...x,
+                            status: "pending" as "pending"
+                          }))]);
+                        }}
+                        disabled={!userPrompt.trim()}
+                        className='absolute bottom-3 right-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white p-2.5 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-blue-600 disabled:hover:to-purple-600 group shadow-lg hover:shadow-xl hover:scale-105'
+                      >
+                        <Send className='w-5 h-5 group-hover:translate-x-0.5 transition-transform' />
+                      </button>
+                    </div>
+                    <div className='px-4 py-2 bg-gray-900/50 border-t border-gray-700 flex items-center gap-2 text-xs text-gray-500'>
+                      <Sparkles className='w-3.5 h-3.5' />
+                      <span>Press Enter to send, Shift+Enter for new line</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
