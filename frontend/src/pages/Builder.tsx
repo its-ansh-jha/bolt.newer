@@ -284,21 +284,79 @@ export function Builder() {
 
                           setPrompt("");
                           setLoading(true);
-                          const stepsResponse = await axios.post(`${BACKEND_URL}/chat`, {
-                            messages: [...llmMessages, newMessage]
-                          });
-                          setLoading(false);
-
                           setLlmMessages(x => [...x, newMessage]);
-                          setLlmMessages(x => [...x, {
-                            role: "assistant",
-                            content: stepsResponse.data.response
-                          }]);
                           
-                          setSteps(s => [...s, ...parseXml(stepsResponse.data.response).map(x => ({
-                            ...x,
-                            status: "pending" as "pending"
-                          }))]);
+                          let fullResponse = "";
+                          
+                          try {
+                            const response = await fetch(`${BACKEND_URL}/chat`, {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                              body: JSON.stringify({
+                                messages: [...llmMessages, newMessage]
+                              })
+                            });
+
+                            const reader = response.body?.getReader();
+                            const decoder = new TextDecoder();
+
+                            if (reader) {
+                              while (true) {
+                                const { done, value } = await reader.read();
+                                if (done) break;
+
+                                const chunk = decoder.decode(value);
+                                const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+                                for (const line of lines) {
+                                  if (line.startsWith('data: ')) {
+                                    const data = line.slice(6);
+                                    if (data === '[DONE]') continue;
+                                    
+                                    try {
+                                      const parsed = JSON.parse(data);
+                                      if (parsed.content) {
+                                        fullResponse += parsed.content;
+                                        // Update the assistant message in real-time
+                                        setLlmMessages(x => {
+                                          const newMessages = [...x];
+                                          if (newMessages[newMessages.length - 1]?.role === 'assistant') {
+                                            newMessages[newMessages.length - 1] = {
+                                              role: 'assistant',
+                                              content: fullResponse
+                                            };
+                                          } else {
+                                            newMessages.push({
+                                              role: 'assistant',
+                                              content: fullResponse
+                                            });
+                                          }
+                                          return newMessages;
+                                        });
+                                      }
+                                    } catch (e) {
+                                      // Skip invalid JSON
+                                    }
+                                  }
+                                }
+                              }
+                            }
+
+                            setLoading(false);
+
+                            // Parse the complete response and update steps
+                            if (fullResponse) {
+                              setSteps(s => [...s, ...parseXml(fullResponse).map(x => ({
+                                ...x,
+                                status: "pending" as "pending"
+                              }))]);
+                            }
+                          } catch (error) {
+                            console.error('Streaming error:', error);
+                            setLoading(false);
+                          }
                         }}
                         disabled={!userPrompt.trim()}
                         className='absolute bottom-3 right-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white p-2.5 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-blue-600 disabled:hover:to-purple-600 group shadow-lg hover:shadow-xl hover:scale-105'
@@ -327,7 +385,7 @@ export function Builder() {
               {activeTab === 'code' ? (
                 <CodeEditor file={selectedFile} />
               ) : (
-                <PreviewFrame webContainer={webcontainer} files={files} />
+                webcontainer && <PreviewFrame webContainer={webcontainer} files={files} />
               )}
             </div>
           </div>
