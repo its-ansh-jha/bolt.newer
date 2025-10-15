@@ -35,11 +35,13 @@ export function Builder() {
   useEffect(() => {
     let originalFiles = [...files];
     let updateHappened = false;
-    let lastCreatedFile: FileItem | null = null;
+    let lastModifiedFile: FileItem | null = null;
     
     steps.filter(({status}) => status === "pending").map(step => {
       updateHappened = true;
-      if (step?.type === StepType.CreateFile) {
+      
+      // Handle both CreateFile and EditFile step types
+      if (step?.type === StepType.CreateFile || step?.type === StepType.EditFile) {
         let parsedPath = step.path?.split("/") ?? []; // ["src", "components", "App.tsx"]
         let currentFileStructure = [...originalFiles]; // {}
         let finalAnswerRef = currentFileStructure;
@@ -61,10 +63,10 @@ export function Builder() {
                 content: step.code
               };
               currentFileStructure.push(newFile);
-              lastCreatedFile = newFile;
+              lastModifiedFile = newFile;
             } else {
               file.content = step.code;
-              lastCreatedFile = file;
+              lastModifiedFile = file;
             }
           } else {
             /// in a folder
@@ -91,8 +93,8 @@ export function Builder() {
       setFiles(originalFiles);
       
       // Auto-select the last created/edited file
-      if (lastCreatedFile) {
-        setSelectedFile(lastCreatedFile);
+      if (lastModifiedFile) {
+        setSelectedFile(lastModifiedFile);
       }
       
       setSteps(steps => steps.map((s: Step) => {
