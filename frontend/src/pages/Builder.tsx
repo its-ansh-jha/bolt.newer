@@ -31,13 +31,18 @@ export function Builder() {
   const [files, setFiles] = useState<FileItem[]>([]);
 
   useEffect(() => {
+    const pendingSteps = steps.filter(({status}) => status === "pending");
+    
+    if (pendingSteps.length === 0) return;
+
     let originalFiles = [...files];
     let updateHappened = false;
-    steps.filter(({status}) => status === "pending").map(step => {
+    
+    pendingSteps.forEach(step => {
       updateHappened = true;
       if (step?.type === StepType.CreateFile) {
-        let parsedPath = step.path?.split("/") ?? []; // ["src", "components", "App.tsx"]
-        let currentFileStructure = [...originalFiles]; // {}
+        let parsedPath = step.path?.split("/") ?? [];
+        let currentFileStructure = [...originalFiles];
         let finalAnswerRef = currentFileStructure;
   
         let currentFolder = ""
@@ -77,22 +82,21 @@ export function Builder() {
         }
         originalFiles = finalAnswerRef;
       }
-
-    })
+    });
 
     if (updateHappened) {
-
-      setFiles(originalFiles)
-      setSteps(steps => steps.map((s: Step) => {
-        return {
-          ...s,
-          status: "completed"
+      setFiles(originalFiles);
+      setSteps(prevSteps => prevSteps.map((s: Step) => {
+        if (s.status === "pending") {
+          return {
+            ...s,
+            status: "completed"
+          };
         }
-        
-      }))
+        return s;
+      }));
     }
-    console.log(files);
-  }, [steps, files]);
+  }, [steps]);
 
   useEffect(() => {
     const createMountStructure = (files: FileItem[]): Record<string, any> => {
